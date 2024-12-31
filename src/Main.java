@@ -62,14 +62,14 @@ public class Main {
         generateCodes(root, "");
 
         try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(outputFile))) {
-            // Write frequency map size and the map entries
+            
             dos.writeInt(frequencyMap.size());
             for (Map.Entry<Character, Long> entry : frequencyMap.entrySet()) {
                 dos.writeChar(entry.getKey());
                 dos.writeLong(entry.getValue());
             }
 
-            // Create a bitset for encoded data
+            
             BitSet bitSet = new BitSet();
             int bitIndex = 0;
             for (char c : content.toCharArray()) {
@@ -84,23 +84,19 @@ public class Main {
 
             dos.writeInt(bitIndex);
 
-            // Get the raw byte array from the BitSet
             byte[] rawByteArray = bitSet.toByteArray();
-
-            // Create a new array with the required length and copy the raw bytes
+            
             byte[] paddedByteArray = new byte[byteLength];
             System.arraycopy(rawByteArray, 0, paddedByteArray, 0, rawByteArray.length);
 
             // System.out.println(Arrays.toString(paddedByteArray));
 
-            // Write the bitset itself
             dos.write(paddedByteArray);
         }
     }
 
     private static void decompress(String inputFile, String outputFile) throws IOException {
         try (DataInputStream dis = new DataInputStream(new FileInputStream(inputFile))) {
-            // Read frequency map size and entries
             int size = dis.readInt();
             Map<Character, Long> frequencyMap = new HashMap<>();
             for (int i = 0; i < size; i++) {
@@ -109,7 +105,6 @@ public class Main {
                 frequencyMap.put(symbol, frequency);
             }
 
-            // Rebuild the Huffman tree
             Node root = buildHuffmanTree(frequencyMap);
             generateCodes(root, "");
 
@@ -117,14 +112,12 @@ public class Main {
 
             int bitLength = dis.readInt();
 
-            // Read the encoded byte array
             byte[] encodedBytes = dis.readAllBytes();
             BitSet bitSet = new BitSet(encodedBytes.length * 8);
 
             // System.out.println(bitSet.toString());
             // System.out.println(bitSet.length());
 
-            // Decode the data
             StringBuilder encodedData = new StringBuilder();
             for (int i = 0; i < encodedBytes.length; i++) {
                 for (int j = 0; j < 8; j++) {
@@ -166,25 +159,19 @@ public class Main {
     private static Node buildHuffmanTree(Map<Character, Long> frequencyMap) {
         PriorityQueue<Node> priorityQueue = new PriorityQueue<>(Comparator.comparingLong(node -> node.frequency));
 
-        // Создаем узлы для каждого символа и добавляем их в очередь
         for (HashMap.Entry<Character, Long> entry : frequencyMap.entrySet()) {
             priorityQueue.add(new Node(entry.getKey(), entry.getValue()));
         }
-
-        // Построение дерева Хаффмана
+        
         while (priorityQueue.size() > 1) {
-            // Извлекаем два узла с минимальной частотой
             Node left = priorityQueue.poll();
             Node right = priorityQueue.poll();
 
-            // Создаем новый внутренний узел с суммарной частотой
             Node parent = new Node(left.frequency + right.frequency, left, right);
 
-            // Добавляем новый узел обратно в очередь
             priorityQueue.add(parent);
         }
 
-        // Возвращаем корень дерева
         return priorityQueue.poll();
     }
 
